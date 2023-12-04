@@ -7,6 +7,14 @@
 	<title>Ini Peta Interaktif</title>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 		integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.css" /> 
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+		integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ=="
+		crossorigin="anonymous" referrerpolicy="no-referrer" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css"
+		integrity="sha512-P9vJUXK+LyvAzj8otTOKzdfF1F3UYVl13+F8Fof8/2QNb8Twd6Vb+VD52I7+87tex9UXxnzPgWA3rH96RExA7A=="
+		crossorigin="anonymous" referrerpolicy="no-referrer" />
 	<style>
 		html,
 		body,
@@ -19,18 +27,42 @@
 </head>
 
 <body>
+
 	<div id="map"></div>
+
+	<div id="basemap-control" class="leaflet-top leaflet-right"></div>
 	<script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
 	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
 		integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+	<script src="https://unpkg.com/leaflet-providers@1.12.0/leaflet-providers.js"></script>
+	<script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
+	 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
+	<!-- Search JavaScript Library -->
+	<script src="https://calvinmetcalf.github.io/leaflet-ajax/dist/leaflet.ajax.js"></script>
+	<script src="https://calvinmetcalf.github.io/leaflet-ajax/dist/leaflet.ajax.min.js"></script>
 	<script>
 		// yogyakarta
-		var map = L.map('map').setView([-7.797068, 110.370529], 13);
+		var map = L.map('map').setView([-7.787547, 110.3742982], 13);
 
-		// basemap
-		var basemap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-			maxZoom: 18
-		}).addTo(map);
+		// basemaps
+		var openStreetMap = L.tileLayer.provider('OpenStreetMap.Mapnik');
+		var satelliteMap = L.tileLayer.provider('Esri.WorldImagery');
+		var darkMap = L.tileLayer.provider('CartoDB.DarkMatter');
+		// Add basemaps to layers control
+		var basemaps = {
+			"OpenStreetMap": openStreetMap,
+			"Satellite": satelliteMap,
+			"Dark": darkMap
+		};
+
+		// Add default basemap to the map
+		openStreetMap.addTo(map);
+
+		// Control layers
+		L.control.layers(basemaps, null, { position: 'topright' }).addTo(map);
+
+		// Locate control
+		L.control.locate().addTo(map);
 
 		// Export Button
 		var showExport = '<button onclick="loadlayer()" title="Refresh map" class="">reload</button>';
@@ -61,6 +93,27 @@
 				map.fitBounds(point.getBounds());
 			});
 		}
+		//buat style area admin desa dan munculin desanya
+		var areaStyle = {
+			"color": "#008B8B",
+			"weight": 2,
+			"fillOpacity": 0.7,
+			"opacity": 0.45
+		};
+
+
+		var areaAlu = new L.GeoJSON.AJAX(["DIY_KAB.geojson"], {
+			onEachFeature: function (feature, layer) {
+				var popupText = "Provinsi: " + feature.properties.NAMOBJ;
+				if (feature.properties.PROVINSI) {
+					popupText += "<br/>Kabupaten: " + feature.properties.KABUPATEN;
+				}
+				if (feature.properties.jumlahALL) {
+					popupText += "<a href='halamanalufe.php'><br/>Jumlah Sekolah: 12</a>" //+ feature.properties.jumlahALL;
+				}
+				layer.bindPopup(popupText);
+			}, style: areaStyle
+		}).addTo(map);
 
 		loadlayer();
 	</script>
